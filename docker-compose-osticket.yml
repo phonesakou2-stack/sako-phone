@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  osticket:
+    image: osticket/osticket:latest
+    container_name: osticket
+    depends_on:
+      - db
+    ports:
+      - "9000:9000" # For PHP-FPM
+    volumes:
+      - osticket-data:/var/www/html
+      - ./osticket/plugins:/var/www/html/include/plugins
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=osticket
+      - MYSQL_USER=osticket
+      - MYSQL_PASSWORD=my-osticket-db-password
+    restart: always
+
+  db:
+    image: mariadb:10.11
+    container_name: osticket_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-super-secret-root-password
+      - MYSQL_DATABASE=osticket
+      - MYSQL_USER=osticket
+      - MYSQL_PASSWORD=my-osticket-db-password
+    volumes:
+      - osticket-db-data:/var/lib/mysql
+    restart: always
+
+  nginx:
+    image: nginx:1.25
+    container_name: osticket_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - osticket-data:/var/www/html:ro
+    depends_on:
+      - osticket
+    restart: always
+
+volumes:
+  osticket-data:
+  osticket-db-data:
